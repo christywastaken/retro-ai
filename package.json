@@ -1,14 +1,17 @@
 {
   "name": "retro-ai-assistant",
   "displayName": "Retro AI Assistant",
-  "description": "Retrospective AI code suggestions for learning",
+  "description": "Retrospective AI code suggestions",
   "version": "0.0.1",
   "author": "Christian Harrison",
   "license": "GPL-3.0",
   "engines": {
     "vscode": "^1.85.0"
   },
-  "categories": ["AI", "Education"], 
+  "categories": [
+    "AI",
+    "Education"
+  ],
   "activationEvents": [
     "onLanguage:typescript",
     "onLanguage:typescriptreact"
@@ -18,19 +21,28 @@
     "configuration": {
       "title": "Retro AI Assistant",
       "properties": {
-        "retroAI.anthropicApiKey": {
-          "type": "string",
-          "default": "",
-          "description": "Your Anthropic API key"
-        },
         "retroAI.enabled": {
           "type": "boolean",
           "default": true,
           "description": "Enable/disable the assistant"
+        },
+        "retroAI.model": {
+          "type": "string",
+          "default": "claude-haiku-4-5",
+          "enum": [
+            "claude-haiku-4-5",
+            "claude-sonnet-4-5",
+            "claude-opus-4-5"
+          ],
+          "description": "Anthropic model to use"
         }
       }
     },
     "commands": [
+      {
+        "command": "retroAI.setApiKey",
+        "title": "Retro AI: Set API Key"
+      },
       {
         "command": "retroAI.analyzeCurrentFunction",
         "title": "Retro AI: Analyze Current Function"
@@ -38,6 +50,14 @@
       {
         "command": "retroAI.clearSuggestions",
         "title": "Retro AI: Clear All Suggestions"
+      },
+      {
+        "command": "retroAI.showSuggestions",
+        "title": "Retro AI: Show Suggestions"
+      },
+      {
+        "command": "retroAI.selectModel",
+        "title": "Retro AI: Select Model"
       }
     ]
   },
@@ -55,6 +75,6 @@
     "typescript": "^5.3.0"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.24.0"
+    "@anthropic-ai/sdk": "^0.72.1"
   }
 }
