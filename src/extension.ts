@@ -5,7 +5,6 @@ import { AnthropicProvider } from './ai/anthropic'
 import { SuggestionStore } from './storage/suggestions'
 import { GutterDecorationProvider } from './ui/gutterDecoration'
 import { RetroHoverProvider } from './ui/hover'
-import { log } from 'console'
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Retro is now active')
@@ -16,14 +15,13 @@ export function activate(context: vscode.ExtensionContext) {
 		return
 	}
 
+	const store = SuggestionStore.getInstance()
 	const tsAnalyzer = new TypescriptAnalyzer()
 	const aiProvider = new AnthropicProvider(context)
-	const store = new SuggestionStore()
-	const gutterProvider = new GutterDecorationProvider(store)
 	const hoverProvider = new RetroHoverProvider(store)
+	const gutterProvider = new GutterDecorationProvider(store)
 
 	// update decorations when editor changes
-	// TODO: when do we actually want to update?
 	function updateDecorations(): void {
 		const editor = vscode.window.activeTextEditor
 		if (editor) {
@@ -31,11 +29,13 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	}
 
+	// register hover 
 	const hoverRegistration = vscode.languages.registerHoverProvider(
 		[{ language: 'typescript' }, { language: 'typescriptreact' }],
 		hoverProvider
 	)
 
+	// command for setting apiKey
 	const setApiKeyCommand = vscode.commands.registerCommand('retroAI.setApiKey', async () => {
 		const apiKey = await vscode.window.showInputBox({
 			prompt: 'Enter your Anthropic API key',
@@ -48,6 +48,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	})
 
+	// command for selecting model
 	const selectModel = vscode.commands.registerCommand('retroAI.selectModel', async () => {
 		// TODO: for now we can just pick from the Anthropic models
 		const models = [
@@ -68,6 +69,8 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	})
 
+	// command to analyze current window
+	// TODO: reconsider this
 	const analyzeCommand = vscode.commands.registerCommand('retroAI.analyzeCurrentFunction', async () => {
 		const editor = vscode.window.activeTextEditor
 		if (editor) {
@@ -76,6 +79,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	})
 
+	// command to clear all suggestions
 	const clearCommand = vscode.commands.registerCommand('retroAI.clearSuggestions', () => {
 		store.clearAll()
 		updateDecorations()
@@ -107,21 +111,31 @@ export function activate(context: vscode.ExtensionContext) {
 			vscode.window.showInformationMessage(`${suggestions.length} suggestions - check Debug Console`)
 		}
 	)
-
+	
 	const analyzeTsDocument = debounce(async (document: vscode.TextDocument) => {
 		console.log('retro analyzing document:', document.fileName)
 		const scopes = await tsAnalyzer.detectCompletedScopes(document)
+		const documentUri = document.uri.toString()
+
+		// remove scopes that no longer exist (deleted/renamed functions)
+		store.pruneStale(documentUri, scopes.map((s) => s.name))
 
 		for (const scope of scopes) {
+			const { exists, changed } = store.check(documentUri, scope)
+
+			if (exists && !changed) {
+				// if content has not changed, update the range just in case it has moved
+				store.updateRange(documentUri, scope.name, scope.range)
+				console.log(`Skipping ${scope.name} - unchanged, updated range`)
+				continue
+			}
+
+			// analyze new scope if it has changed
 			try {
 				const context = tsAnalyzer.getContext(document, scope)
 				const suggestions = await aiProvider.analyze(scope.content, context, 'typescript')
-				if (suggestions.length > 0) {
-					store.add(document.uri.toString(), scope, suggestions)
-					console.log(`Added ${suggestions.length} suggestions to ${scope.name}`)
-				} else {
-					console.log(`No suggestions for scope ${scope.name}`)
-				}
+				store.set(documentUri, scope, suggestions)
+				console.log(`Analyzed ${scope.name}: ${suggestions.length} suggestions`)
 			} catch (error) {
 				console.error('Analysis failed:', error)
 			}
@@ -131,7 +145,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 	const changeListener = vscode.workspace.onDidChangeTextDocument((event) => {
 		if (event.document.languageId == 'typescript' || event.document.languageId == 'typescriptreact') {
-			// TODO: debounce and detect completed scopes
 			analyzeTsDocument(event.document)
 		}
 	})

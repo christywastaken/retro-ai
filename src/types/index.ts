@@ -18,6 +18,12 @@ export interface Suggestion {
 	createdAt: number
 }
 
+export interface StoredScope {
+	hash: string
+	range: vscode.Range
+	suggestions: Suggestion[]
+}
+
 export interface ICodeAnalyzer {
 	languageId: string
 	// detectCompletedScopes(document: vscode.TextDocument, changeEvent: vscode.TextDocumentChangeEvent): Promise<CodeScope[]>

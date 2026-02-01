@@ -74,8 +74,8 @@ export class TypescriptAnalyzer implements ICodeAnalyzer {
 
 	getContext(document: vscode.TextDocument, scope: CodeScope): string {
 		// get some lines before the function for context (e.g. imports etc)
-    // TODO: want to think about how far we want to extend context?
-    // ... this is defo something that will need refining...
+		// TODO: want to think about how far we want to extend context?
+		// ... this is defo something that will need refining...
 		const startLine = Math.max(0, scope.range.start.line - 10)
 		const contextRange = new vscode.Range(startLine, 0, scope.range.start.line, 0)
 		return document.getText(contextRange)

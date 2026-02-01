@@ -1,5 +1,4 @@
 import { IAIProvider, Suggestion } from '../types'
-import { buildAnalysisPrompt } from './prompts'
 import Anthropic from '@anthropic-ai/sdk'
 import * as vscode from 'vscode'
 
