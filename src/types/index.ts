@@ -1,7 +1,7 @@
 import * as vscode from 'vscode'
 
 export interface CodeScope {
-	type: 'function' | 'efficiency' | 'class' | 'block'
+	type: 'function' | 'method' | 'class' | 'block'
 	name: string
 	range: vscode.Range
 	content: string
@@ -20,7 +20,8 @@ export interface Suggestion {
 
 export interface ICodeAnalyzer {
 	languageId: string
-	detectCompletedScopes(document: vscode.TextDocument, changeEvent: vscode.TextDocumentChangeEvent): Promise<CodeScope[]>
+	// detectCompletedScopes(document: vscode.TextDocument, changeEvent: vscode.TextDocumentChangeEvent): Promise<CodeScope[]>
+	detectCompletedScopes(document: vscode.TextDocument): Promise<CodeScope[]>
 	getContext(document: vscode.TextDocument, scope: CodeScope): string
 }
 

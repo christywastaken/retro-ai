@@ -1,4 +1,8 @@
 import * as vscode from 'vscode'
+import { TypescriptAnalyzer } from './analyzers/typescriptAnalyzer'
+import { debounce } from './utils/debounce'
+
+const tsAnalyzer = new TypescriptAnalyzer()
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Retro is now active')
@@ -18,10 +22,19 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.window.showInformationMessage('Suggestions cleared')
 	})
 
+	const analyzeTsDocument = debounce(async (document: vscode.TextDocument) => {
+		console.log('retro analyzing document:', document.fileName)
+		const scopes = await tsAnalyzer.detectCompletedScopes(document)
+
+		for (const scope of scopes) {
+			console.log(`found ${scope.type}: ${scope.name}`)
+		}
+	}, 5000)
+
 	const changeListener = vscode.workspace.onDidChangeTextDocument((event) => {
 		if (event.document.languageId == 'typescript' || event.document.languageId == 'typescriptreact') {
-			// TODO: deboubnce and detect completed scopes
-			console.log('Document changed:', event.document.fileName)
+			// TODO: debounce and detect completed scopes
+			analyzeTsDocument(event.document)
 		}
 	})
 
