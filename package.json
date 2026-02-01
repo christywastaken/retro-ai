@@ -1,0 +1,60 @@
+{
+  "name": "retro-ai-assistant",
+  "displayName": "Retro AI Assistant",
+  "description": "Retrospective AI code suggestions for learning",
+  "version": "0.0.1",
+  "author": "Christian Harrison",
+  "license": "GPL-3.0",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["AI", "Education"], 
+  "activationEvents": [
+    "onLanguage:typescript",
+    "onLanguage:typescriptreact"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "Retro AI Assistant",
+      "properties": {
+        "retroAI.anthropicApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Your Anthropic API key"
+        },
+        "retroAI.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable/disable the assistant"
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "retroAI.analyzeCurrentFunction",
+        "title": "Retro AI: Analyze Current Function"
+      },
+      {
+        "command": "retroAI.clearSuggestions",
+        "title": "Retro AI: Clear All Suggestions"
+      }
+    ]
+  },
+  "scripts": {
+    "dev": "npm run watch",
+    "build": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node",
+    "watch": "npm run build -- --watch --sourcemap",
+    "package": "npm run build -- --minify",
+    "lint": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "esbuild": "^0.20.0",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.24.0"
+  }
+}

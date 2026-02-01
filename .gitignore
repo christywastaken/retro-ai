@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Environment variables
+.env
+.env.local
+
+# VS Code extension package
+*.vsix
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE (optional, if you want to keep .vscode)
+# .vscode/
+
+
+# misc
+project-plan/
