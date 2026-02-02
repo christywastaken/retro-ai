@@ -50,12 +50,9 @@ export class TypescriptAnalyzer implements ICodeAnalyzer {
 	}
 
 	private isArrowFunction(content: string): boolean {
-		// we need to match patterns for arrow functions as they fall under fields/ variables in the vscode symbols.
-		// const foo = () => {}
-		// const foo = (x: string) => {}
-		// const foo = async () => {}
-		// const foo: SomeType = () => {}
-		const arrowFunctionPattern = /=\s*(async\s*)?\([^)]*\)\s*(:\s*\w+)?\s*=>/
+		// Match arrow functions that are actual declarations, not inline callbacks
+		// Must start with const/let/var/export at line beginning
+		const arrowFunctionPattern = /^(export\s+)?(const|let|var)\s+\w+\s*(:\s*[^=]+)?\s*=\s*(async\s*)?\([^)]*\)\s*(:\s*[^=]+)?\s*=>/m
 		return arrowFunctionPattern.test(content)
 	}
 

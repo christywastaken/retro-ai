@@ -4,6 +4,8 @@ import * as vscode from 'vscode'
 export class SuggestionStore {
 	private documents: Map<string, Map<string, StoredScope>> = new Map()
 	private static instance: SuggestionStore
+	private context: vscode.ExtensionContext | null = null
+	private readonly STORAGE_KEY = 'retroAI.suggestions'
 
 	private constructor() {}
 
@@ -12,6 +14,67 @@ export class SuggestionStore {
 			SuggestionStore.instance = new SuggestionStore()
 		}
 		return SuggestionStore.instance
+	}
+
+	initialize(context: vscode.ExtensionContext): void {
+		this.context = context
+		this.loadFromWorkspace()
+	}
+
+	private loadFromWorkspace(): void {
+		if (!this.context) return
+
+		const stored = this.context.workspaceState.get<Record<string, any>>(this.STORAGE_KEY)
+		if (!stored) return
+
+		// reconstruct the map structure from the store data
+		for (const [docUri, scopes] of Object.entries(stored)) {
+			const scopeMap = new Map<string, StoredScope>()
+			for (const [scopeName, scopeData] of Object.entries(scopes as Record<string, any>))
+				scopeMap.set(scopeName, {
+					hash: scopeData.hash,
+					range: new vscode.Range(
+						new vscode.Position(scopeData.range.start.line, scopeData.range.start.character),
+						new vscode.Position(scopeData.range.end.line, scopeData.range.end.character)
+					),
+					suggestions: scopeData.suggestions.map((s: any) => ({
+						...s,
+						range: new vscode.Range(
+							new vscode.Position(s.range.start.line, s.range.start.character),
+							new vscode.Position(s.range.end.line, s.range.end.character)
+						)
+					}))
+				})
+			this.documents.set(docUri, scopeMap)
+		}
+		console.log('-- Loaded suggestions from workspace storage')
+	}
+
+	private async saveToWorkspace(): Promise<void> {
+		if (!this.context) return
+
+		// convert map to plain object for json serial
+		const toStore: Record<string, any> = {}
+		for (const [docUri, scopes] of this.documents.entries()) {
+			toStore[docUri] = {}
+			for (const [scopeName, scopeData] of scopes.entries()) {
+				toStore[docUri][scopeName] = {
+					hash: scopeData.hash,
+					range: {
+						start: { line: scopeData.range.start.line, character: scopeData.range.start.character },
+						end: { line: scopeData.range.end.line, character: scopeData.range.end.character }
+					},
+					suggestions: scopeData.suggestions.map((s) => ({
+						...s,
+						range: {
+							start: { line: s.range.start.line, character: s.range.start.character },
+							end: { line: s.range.end.line, character: s.range.end.character }
+						}
+					}))
+				}
+			}
+		}
+		await this.context.workspaceState.update(this.STORAGE_KEY, toStore)
 	}
 
 	/**
@@ -52,6 +115,8 @@ export class SuggestionStore {
 
 		this.documents.set(documentUri, docScopes)
 		console.log(`Stored ${scope.name} with ${suggestions.length} suggestions`)
+
+		this.saveToWorkspace()
 	}
 
 	/**
@@ -103,10 +168,12 @@ export class SuggestionStore {
 
 	clearDoc(documentUri: string): void {
 		this.documents.delete(documentUri)
+		this.saveToWorkspace()
 	}
 
 	clearAll(): void {
 		this.documents.clear()
+		this.saveToWorkspace()
 	}
 
 	private hash(scope: CodeScope): string {

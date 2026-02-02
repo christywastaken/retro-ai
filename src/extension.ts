@@ -14,6 +14,7 @@ export function activate(context: vscode.ExtensionContext) {
 	}
 
 	const store = SuggestionStore.getInstance()
+	store.initialize(context) 
 	const gutterProvider = new GutterDecorationProvider(store)
 	const hoverProvider = new RetroHoverProvider(store)
 
@@ -42,14 +43,9 @@ export function activate(context: vscode.ExtensionContext) {
 		hoverProvider
 	)
 
-	context.subscriptions.push(
-		changeListener,
-		editorChangeListener,
-		hoverRegistration,
-		{
-			dispose: () => gutterProvider.dispose()
-		}
-	)
+	context.subscriptions.push(changeListener, editorChangeListener, hoverRegistration, {
+		dispose: () => gutterProvider.dispose()
+	})
 }
 
 export function deactivate() {

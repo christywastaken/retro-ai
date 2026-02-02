@@ -3,7 +3,7 @@ import { PythonAnalyzer } from '../analyzers/pythonAnalyzer'
 import { SuggestionStore } from '../storage/suggestions'
 import { AnthropicProvider } from '../ai/anthropic'
 import { debounce } from '../utils/debounce'
-import { CodeScope } from '../types'
+import { CodeScope, ICodeAnalyzer } from '../types'
 import * as vscode from 'vscode'
 
 export class DocumentAnalyzerManager {
@@ -28,12 +28,19 @@ export class DocumentAnalyzerManager {
 	private async analyzeDocument(document: vscode.TextDocument): Promise<void> {
 		console.log('retro analyzing document:', document.fileName)
 		let scopes: CodeScope[]
+		let language: string
+		let analyzer: ICodeAnalyzer
+
 		switch (document.languageId) {
 			case 'typescript':
 			case 'typescriptreact':
+				language = 'typescript'
+				analyzer = this.tsAnalyzer
 				scopes = await this.tsAnalyzer.detectCompletedScopes(document)
 				break
 			case 'python':
+				language = 'python'
+				analyzer = this.pythonAnalyzer
 				scopes = await this.pythonAnalyzer.detectCompletedScopes(document)
 				break
 			default:
@@ -66,8 +73,8 @@ export class DocumentAnalyzerManager {
 
 				// analyze new scope if it has changed
 				try {
-					const context = this.tsAnalyzer.getContext(document, scope)
-					const suggestions = await this.aiProvider.analyze(scope.content, context, 'typescript')
+					const context = analyzer.getContext(document, scope)
+					const suggestions = await this.aiProvider.analyze(scope.content, context, language)
 					this.store.set(documentUri, scope, suggestions)
 					console.log(`Analyzed ${scope.name}: ${suggestions.length} suggestions`)
 				} catch (error) {
