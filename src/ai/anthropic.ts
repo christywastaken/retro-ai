@@ -22,12 +22,9 @@ export class AnthropicProvider implements IAIProvider {
 	}
 
 	async analyze(code: string, context: string, language: string): Promise<Suggestion[]> {
-		console.time('ai analysis time:')
 		const client = await this.getClient()
 		const config = vscode.workspace.getConfiguration('retroAI')
 		const model = config.get<string>('model') || 'claude-haiku-4-5'
-		// TODO: how are we going to stop it from rePrompting for the same function?
-		// .... maybe we have a hash key of the function name + file name, and we only send the prompt if we haven't got an already completed
 		try {
 			const response = await client.messages.create({
 				model: model,
@@ -102,7 +99,6 @@ Always provide at least one suggestion, even if minor (e.g., adding type annotat
 			
 			console.log('Tool use input:', JSON.stringify(toolUse.input, null, 2))
 			const input = toolUse.input as { suggestions: any[] }
-			console.timeEnd('ai analysis time:')
 			
 			if (!input || !input.suggestions) {
 				console.log('No suggestions in tool input, raw input:', input)

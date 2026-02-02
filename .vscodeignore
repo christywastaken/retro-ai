@@ -1,6 +1,14 @@
 .vscode/**
-node_modules/**
+.vscode-test/**
+.github/**
 src/**
-tsconfig.json
-**/*.map
+node_modules/**
+project-plan/**
 .gitignore
+.git/**
+tsconfig.json
+**/*.ts
+**/*.map
+*.vsix
+.DS_Store
+assets/*.svg

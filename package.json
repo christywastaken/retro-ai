@@ -1,20 +1,46 @@
 {
   "name": "retro-ai-assistant",
   "displayName": "Retro AI Assistant",
-  "description": "Retrospective AI code suggestions",
+  "description": "AI-powered code analysis with real-time suggestions for refactoring, efficiency, and style improvements",
   "version": "0.0.1",
   "author": "Christian Harrison",
+  "publisher": "christianharris",
   "license": "GPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/christianharris-dev/retro-ai-assistant"
+  },
+  "bugs": {
+    "url": "https://github.com/christianharris-dev/retro-ai-assistant/issues"
+  },
+  "homepage": "https://github.com/christianharris-dev/retro-ai-assistant#readme",
+  "icon": "assets/icon.png",
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
+  },
+  "keywords": [
+    "ai",
+    "code review",
+    "refactoring",
+    "typescript",
+    "python",
+    "anthropic",
+    "claude",
+    "suggestions"
+  ],
   "engines": {
     "vscode": "^1.85.0"
   },
   "categories": [
     "AI",
-    "Education"
+    "Linters",
+    "Other"
   ],
   "activationEvents": [
     "onLanguage:typescript",
-    "onLanguage:typescriptreact"
+    "onLanguage:typescriptreact",
+    "onLanguage:python"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -58,6 +84,22 @@
       {
         "command": "retroAI.selectModel",
         "title": "Retro AI: Select Model"
+      },
+      {
+        "command": "retroAI.showSuggestionsPanel",
+        "title": "Retro AI: Open Suggestions Panel"
+      },
+      {
+        "command": "retroAI.test.addMockSuggestions",
+        "title": "Retro AI [Test]: Add Mock Suggestions to Current Line"
+      },
+      {
+        "command": "retroAI.test.addMultipleMocks",
+        "title": "Retro AI [Test]: Add Mock Suggestions to Multiple Lines"
+      },
+      {
+        "command": "retroAI.test.openPanel",
+        "title": "Retro AI [Test]: Open Panel with Mock Data"
       }
     ]
   },

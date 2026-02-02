@@ -1,8 +1,8 @@
 import { ICodeAnalyzer, CodeScope } from '../types'
 import * as vscode from 'vscode'
 
-export class TypescriptAnalyzer implements ICodeAnalyzer {
-	languageId = 'typescript'
+export class PythonAnalyzer implements ICodeAnalyzer {
+	languageId = 'python'
 
 	async detectCompletedScopes(document: vscode.TextDocument): Promise<CodeScope[]> {
 		// get symbols from VSC built in ts support
@@ -31,32 +31,12 @@ export class TypescriptAnalyzer implements ICodeAnalyzer {
 					range: symbol.range,
 					content
 				})
-			} else if (symbol.kind === vscode.SymbolKind.Variable || symbol.kind === vscode.SymbolKind.Field) {
-				// test for arrow functions
-				if (this.isArrowFunction(content)) {
-					scopes.push({
-						type: 'function',
-						name: symbol.name,
-						range: symbol.range,
-						content
-					})
-				}
 			}
 			if (symbol.children.length > 0) {
 				// recursively check the children
 				this.collectScopes(symbol.children, document, scopes)
 			}
 		}
-	}
-
-	private isArrowFunction(content: string): boolean {
-		// we need to match patterns for arrow functions as they fall under fields/ variables in the vscode symbols.
-		// const foo = () => {}
-		// const foo = (x: string) => {}
-		// const foo = async () => {}
-		// const foo: SomeType = () => {}
-		const arrowFunctionPattern = /=\s*(async\s*)?\([^)]*\)\s*(:\s*\w+)?\s*=>/
-		return arrowFunctionPattern.test(content)
 	}
 
 	private symbolKindToScopeType(kind: vscode.SymbolKind): CodeScope['type'] {
