@@ -2,7 +2,7 @@
 
 AI-powered code analysis that provides real-time suggestions for improving your code quality, efficiency, and style.
 
-![Retro AI Demo](https://raw.githubusercontent.com/christianharris-dev/retro-ai-assistant/main/assets/demo.gif)
+![Retro AI Demo](https://raw.githubusercontent.com/christywastaken/retro-ai/main/assets/demo.gif)
 
 ## Features
 
@@ -23,7 +23,7 @@ AI-powered code analysis that provides real-time suggestions for improving your 
 Search for "Retro AI Assistant" in the VS Code Extensions marketplace, or install from the command line:
 
 ```bash
-code --install-extension christianharris.retro-ai-assistant
+code --install-extension ChristyWasTaken.retro-ai-assistant
 ```
 
 ### 2. Set Your API Key
@@ -92,5 +92,5 @@ GPL-3.0 - see [LICENSE](LICENSE) for details.
 
 ## Support
 
-- [Report Issues](https://github.com/christianharris-dev/retro-ai-assistant/issues)
-- [Feature Requests](https://github.com/christianharris-dev/retro-ai-assistant/issues/new?labels=enhancement)
+- [Report Issues](https://github.com/christywastaken/retro-ai/issues)
+- [Feature Requests](https://github.com/christywastaken/retro-ai/issues/new?labels=enhancement)

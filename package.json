@@ -4,16 +4,16 @@
   "description": "AI-powered code analysis with real-time suggestions for refactoring, efficiency, and style improvements",
   "version": "0.0.1",
   "author": "Christian Harrison",
-  "publisher": "christianharris",
+  "publisher": "ChristyWasTaken",
   "license": "GPL-3.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/christianharris-dev/retro-ai-assistant"
+    "url": "https://github.com/christywastaken/retro-ai"
   },
   "bugs": {
-    "url": "https://github.com/christianharris-dev/retro-ai-assistant/issues"
+    "url": "https://github.com/christywastaken/retro-ai/issues"
   },
-  "homepage": "https://github.com/christianharris-dev/retro-ai-assistant#readme",
+  "homepage": "https://github.com/christywastaken/retro-ai#readme",
   "icon": "assets/icon.png",
   "galleryBanner": {
     "color": "#1e1e1e",
