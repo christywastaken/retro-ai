@@ -25,17 +25,37 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	}
 
+	const updateAllVisibleEditors = (): void => {
+		for (const editor of vscode.window.visibleTextEditors) {
+			gutterProvider.update(editor)
+		}
+	}
+
 	const analyzerManager = new DocumentAnalyzerManager(context, store, updateDecorations)
 
 	registerCommands(context, store, updateDecorations)
 	registerTestCommands(context, store, updateDecorations)
 
+	// Apply decorations after a short delay to ensure editor is ready
+	setTimeout(() => {
+		updateAllVisibleEditors()
+	}, 150)
+
 	const changeListener = vscode.workspace.onDidChangeTextDocument((event) => {
 		analyzerManager.handleDocumentChange(event)
 	})
 
-	const editorChangeListener = vscode.window.onDidChangeActiveTextEditor(() => {
-		updateDecorations()
+	const editorChangeListener = vscode.window.onDidChangeActiveTextEditor((editor) => {
+		if (editor) {
+			gutterProvider.update(editor)
+		}
+	})
+
+	// Also update when editors become visible
+	const visibleEditorsListener = vscode.window.onDidChangeVisibleTextEditors((editors) => {
+		for (const editor of editors) {
+			gutterProvider.update(editor)
+		}
 	})
 
 	const hoverRegistration = vscode.languages.registerHoverProvider(
@@ -43,9 +63,13 @@ export function activate(context: vscode.ExtensionContext) {
 		hoverProvider
 	)
 
-	context.subscriptions.push(changeListener, editorChangeListener, hoverRegistration, {
-		dispose: () => gutterProvider.dispose()
-	})
+	context.subscriptions.push(
+		changeListener,
+		editorChangeListener,
+		visibleEditorsListener,
+		hoverRegistration,
+		{ dispose: () => gutterProvider.dispose() }
+	)
 }
 
 export function deactivate() {
