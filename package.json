@@ -2,7 +2,7 @@
   "name": "retro-ai-assistant",
   "displayName": "Retro AI Assistant",
   "description": "AI-powered code analysis with real-time suggestions for refactoring, efficiency, and style improvements",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": "Christian Harrison",
   "publisher": "ChristyWasTaken",
   "license": "GPL-3.0",
