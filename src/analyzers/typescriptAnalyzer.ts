@@ -16,24 +16,49 @@ export class TypescriptAnalyzer implements ICodeAnalyzer {
 	}
 
 	// get all of the scopes within the document
-	// TODO: in the future, we may want to extend this beyond just the current document
-	private collectScopes(symbols: vscode.DocumentSymbol[], document: vscode.TextDocument, scopes: CodeScope[]): void {
+	// Only collects top-level declarations, not nested callbacks
+	private collectScopes(
+		symbols: vscode.DocumentSymbol[],
+		document: vscode.TextDocument,
+		scopes: CodeScope[],
+		isTopLevel: boolean = true
+	): void {
 		for (const symbol of symbols) {
 			const content = document.getText(symbol.range)
-			if (
-				symbol.kind === vscode.SymbolKind.Function ||
-				symbol.kind === vscode.SymbolKind.Method ||
-				symbol.kind === vscode.SymbolKind.Class
-			) {
+
+			if (symbol.kind === vscode.SymbolKind.Class) {
+				// Classes: add the class and recurse to get methods
 				scopes.push({
-					type: this.symbolKindToScopeType(symbol.kind),
+					type: 'class',
 					name: symbol.name,
 					range: symbol.range,
 					content
 				})
+				// Recurse into class to get methods, but mark as not top-level
+				if (symbol.children.length > 0) {
+					this.collectScopes(symbol.children, document, scopes, false)
+				}
+			} else if (symbol.kind === vscode.SymbolKind.Method) {
+				// Methods inside classes - always include
+				scopes.push({
+					type: 'method',
+					name: symbol.name,
+					range: symbol.range,
+					content
+				})
+				// Don't recurse into method bodies
+			} else if (symbol.kind === vscode.SymbolKind.Function) {
+				// Named function declarations
+				scopes.push({
+					type: 'function',
+					name: symbol.name,
+					range: symbol.range,
+					content
+				})
+				// Don't recurse into function bodies
 			} else if (symbol.kind === vscode.SymbolKind.Variable || symbol.kind === vscode.SymbolKind.Field) {
-				// test for arrow functions
-				if (this.isArrowFunction(content)) {
+				// Only check top-level variables for arrow function declarations
+				if (isTopLevel && this.isArrowFunctionDeclaration(content, symbol.name)) {
 					scopes.push({
 						type: 'function',
 						name: symbol.name,
@@ -41,32 +66,43 @@ export class TypescriptAnalyzer implements ICodeAnalyzer {
 						content
 					})
 				}
-			}
-			if (symbol.children.length > 0) {
-				// recursively check the children
-				this.collectScopes(symbol.children, document, scopes)
+				// Don't recurse into variable assignments
+			} else if (isTopLevel && symbol.children.length > 0) {
+				// For other top-level symbols (namespaces, modules), recurse
+				this.collectScopes(symbol.children, document, scopes, true)
 			}
 		}
 	}
 
-	private isArrowFunction(content: string): boolean {
-		// Match arrow functions that are actual declarations, not inline callbacks
-		// Must start with const/let/var/export at line beginning
-		const arrowFunctionPattern = /^(export\s+)?(const|let|var)\s+\w+\s*(:\s*[^=]+)?\s*=\s*(async\s*)?\([^)]*\)\s*(:\s*[^=]+)?\s*=>/m
-		return arrowFunctionPattern.test(content)
-	}
-
-	private symbolKindToScopeType(kind: vscode.SymbolKind): CodeScope['type'] {
-		switch (kind) {
-			case vscode.SymbolKind.Function:
-				return 'function'
-			case vscode.SymbolKind.Method:
-				return 'method'
-			case vscode.SymbolKind.Class:
-				return 'class'
-			default:
-				return 'block'
+	private isArrowFunctionDeclaration(content: string, symbolName: string): boolean {
+		// Check if this is an arrow function assignment
+		// The content might start with the variable name (VSCode symbol range)
+		// or with const/let/var/export (full line)
+		const escapedName = symbolName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+		
+		// Pattern 1: Content starts with const/let/var (full declaration)
+		const fullDeclPattern = new RegExp(
+			`^(export\\s+)?(const|let|var)\\s+${escapedName}\\s*(:\\s*[^=]+)?\\s*=\\s*(async\\s*)?\\(`,
+			'm'
+		)
+		
+		// Pattern 2: Content starts with the symbol name (VSCode trimmed range)
+		const trimmedPattern = new RegExp(
+			`^${escapedName}\\s*(:\\s*[^=]+)?\\s*=\\s*(async\\s*)?\\([^)]*\\)\\s*(:\\s*[^=]+)?\\s*=>`,
+			'm'
+		)
+		
+		// Pattern 3: Simple check - contains arrow after assignment
+		const simpleArrowPattern = /=\s*(async\s*)?\([^)]*\)\s*(:\s*[^=]+)?\s*=>/
+		
+		const isArrow = fullDeclPattern.test(content) || trimmedPattern.test(content) || simpleArrowPattern.test(content)
+		
+		// Debug logging
+		if (content.includes('=>')) {
+			console.log(`Arrow check for ${symbolName}: ${isArrow}`)
 		}
+		
+		return isArrow
 	}
 
 	getContext(document: vscode.TextDocument, scope: CodeScope): string {
